@@ -20,6 +20,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 
 public class CameraActivity extends Activity {
@@ -27,7 +28,8 @@ public class CameraActivity extends Activity {
     private Camera mCamera;
     private CameraPreview mPreview;
 	private boolean add;
-    Button capture;
+    private Button capture;
+    private ImageView focus;
     
 	public void onCreate(Bundle savedInstanceState) {
 	       super.onCreate(savedInstanceState);
@@ -36,8 +38,9 @@ public class CameraActivity extends Activity {
 	       if(checkCameraHardware(getApplicationContext())){
 	    	   mCamera = getCameraInstance();
 	    	   initCamera();
+	    	   
 	       }
-	       
+	       focus = (ImageView)findViewById(R.id.focus);
 	       capture = (Button)findViewById(R.id.button_capture);
 	       mPreview = new CameraPreview(this, mCamera);
 	       FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
@@ -48,6 +51,26 @@ public class CameraActivity extends Activity {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				initCamera();
+				focus.setVisibility(View.VISIBLE);
+				focus.postDelayed(new Runnable() {
+				    @Override
+				    public void run() {
+				    	focus.setVisibility(View.GONE);
+				    }
+				}, 200);
+				focus.postDelayed(new Runnable() {
+				    @Override
+				    public void run() {
+				    	focus.setVisibility(View.VISIBLE);
+				    }
+				}, 800);
+				focus.postDelayed(new Runnable() {
+				    @Override
+				    public void run() {
+				    	focus.setVisibility(View.GONE);
+				    }
+				}, 1700);
+				
 				return false;
 			}
 		});
@@ -59,7 +82,42 @@ public class CameraActivity extends Activity {
 				}	    	   
 	       });
 	}
+	
+	@Override
+	protected void onResume() {   
+		super.onResume();
+		Log.wtf("!!!!!!!!!!", "@@@@@@@@@@@@@12");
+       if(checkCameraHardware(getApplicationContext())){
+    	   mCamera = getCameraInstance();
+    	   initCamera();
+    	   
+       }
+       mPreview = new CameraPreview(this, mCamera);
+       FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+       preview.addView(mPreview);
+	}
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        releaseCamera();              // release the camera immediately on pause event
+    }
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		releaseCamera();
+		//mCamera.
+	}
+
+
+
+    private void releaseCamera(){
+        if (mCamera != null){
+            mCamera.release();        // release the camera for other applications
+            mCamera = null;
+        }
+    }
 	/** Check if this device has a camera */
 	private boolean checkCameraHardware(Context context) {
 	    if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
